@@ -7,6 +7,7 @@ import 'package:skill_daan_dashboard/core/constant/app_color.dart';
 import 'package:skill_daan_dashboard/core/constant/app_size.dart';
 import 'package:skill_daan_dashboard/core/widget/app_button.dart';
 import 'package:skill_daan_dashboard/core/widget/app_card.dart';
+import '../../../core/widget/app_dilog.dart';
 import '../controller/category_controller.dart';
 import '../model/category_model.dart';
 
@@ -441,17 +442,18 @@ class _CategoryScreenState extends State<CategoryScreen> {
                 ),
               )
                   : IconButton(
-                onPressed: () {
-                  Get.defaultDialog(
+                onPressed: () async {
+                  final confirm = await AppDialog.show(
+                    context,
                     title: "Delete",
-                    middleText: "Delete this category?",
-                    textConfirm: "Yes",
-                    textCancel: "No",
-                    onConfirm: () {
-                      Get.back();
-                      _categoryController.deleteCategory(category.id!);
-                    },
+                    message: "Are you sure you want to delete this category?",
+                    confirmText: "Yes",
+                    cancelText: "No",
                   );
+
+                  if (confirm) {
+                    _categoryController.deleteCategory(category.id!);
+                  }
                 },
                 icon: const Icon(Icons.delete,size: 18,),
               );

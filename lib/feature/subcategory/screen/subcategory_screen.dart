@@ -8,6 +8,7 @@ import 'package:skill_daan_dashboard/core/constant/app_size.dart';
 import 'package:skill_daan_dashboard/core/widget/app_button.dart';
 import 'package:skill_daan_dashboard/core/widget/app_card.dart';
 import 'package:skill_daan_dashboard/core/widget/flutter_toast.dart';
+import '../../../core/widget/app_dilog.dart';
 import '../../category/controller/category_controller.dart';
 import '../controller/subategory_controller.dart';
 import '../model/subcategory_model.dart';
@@ -479,16 +480,21 @@ class _SubcategoryScreenState extends State<SubcategoryScreen> {
                     child: CircularProgressIndicator(strokeWidth: 2)),
               )
                   : IconButton(
-                onPressed: () {
-                  Get.defaultDialog(
+                onPressed: () async {
+                  final confirm = await AppDialog.show(
+                    context,
                     title: "Delete",
-                    middleText: "Delete this subcategory?",
-                    onConfirm: () {
-                      Get.back();
-                      _subcategoryController.deleteSubItem(
-                          subCategory.category, subCategory.id);
-                    },
+                    message: "Delete this subcategory?",
+                    confirmText: "Yes",
+                    cancelText: "No",
                   );
+
+                  if (confirm) {
+                    _subcategoryController.deleteSubItem(
+                      subCategory.category,
+                      subCategory.id,
+                    );
+                  }
                 },
                 icon: const Icon(Icons.delete, size: 18),
               );

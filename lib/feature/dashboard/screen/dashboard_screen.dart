@@ -1,11 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_instance/src/extension_instance.dart';
+import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:skill_daan_dashboard/core/constant/app_color.dart';
 import 'package:skill_daan_dashboard/core/constant/app_size.dart';
 import 'package:skill_daan_dashboard/core/widget/app_card.dart';
+import 'package:skill_daan_dashboard/feature/category/controller/category_controller.dart';
+import 'package:skill_daan_dashboard/feature/skills/controller/service_controller.dart';
+
+import '../../subcategory/controller/subategory_controller.dart';
+import '../../users/controller/user_controller.dart';
 
 class DashboardScreen extends StatelessWidget {
-  const DashboardScreen({super.key});
+   DashboardScreen({super.key});
+  final _userController = Get.find<UserController>();
+  final _categoryController = Get.find<CategoryController>();
+  final _subcategoryController = Get.find<SubCategoryController>();
+  final _serviceController = Get.find<ServiceController>();
 
   @override
   Widget build(BuildContext context) {
@@ -65,12 +77,27 @@ class DashboardScreen extends StatelessWidget {
           spacing: context.sWidth * 0.0,
           runSpacing: context.sWidth * 0.0,
           children: [
-            _statCard(context, "Total Users", "1,245", Icons.people),
-            _statCard(context, "Active Users", "980", Icons.person),
-            _statCard(context, "Categories", "12", Icons.category),
-            _statCard(context, "Subcategories", "36", Icons.layers),
-            _statCard(context, "Total Skills", "128", Icons.star),
-            _statCard(context, "Revenue", "₹52,340", Icons.currency_rupee),
+            Obx(() {
+                return _statCard(context, "Total Users", "${ _userController.totalCount.value.toString()}", Icons.people);
+              }
+            ),
+            Obx(() {
+              return _statCard(context, "Active Users", "${ _userController.totalCount.value.toString()}", Icons.people);
+            }
+            ),
+            Obx(() {
+              return _statCard(context, "Categories", "${ _categoryController.categoryList.length}", Icons.category);
+            }
+            ),
+            Obx(() {
+              return _statCard(context, "Subcategories", "${ _subcategoryController.subCategories.length}", Icons.layers);
+            }
+            ),
+            Obx(() {
+              return _statCard(context, "Total Skills", "${ _serviceController.services.length}", Icons.star);
+            }
+            ),
+            _statCard(context, "Share App", "______", Icons.share),
           ],
         ),
 

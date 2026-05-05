@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_instance/src/extension_instance.dart';
+import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:skill_daan_dashboard/core/constant/app_color.dart';
 import 'package:skill_daan_dashboard/core/constant/app_size.dart';
 import 'package:skill_daan_dashboard/core/widget/app_card.dart';
+
+import '../controller/user_controller.dart';
+import '../model/user_model.dart';
 
 class UsersScreen extends StatefulWidget {
   const UsersScreen({super.key});
@@ -14,60 +19,27 @@ class UsersScreen extends StatefulWidget {
 
 class _UsersScreenState extends State<UsersScreen> {
 
-  final users = [
-    {
-      "name": "Akshay Sharma",
-      "email": "akshay@gmail.com",
-      "phone": "+91 9876543210",
-      "bio": "Admin | Manages platform",
-      "role": "Admin",
-      "isVisible": true,
-      "image": "https://randomuser.me/api/portraits/men/1.jpg"
-    },
-    {
-      "name": "Rahul Verma",
-      "email": "rahul@gmail.com",
-      "phone": "+91 9123456780",
-      "bio": "Active learner",
-      "role": "User",
-      "isVisible": true,
-      "image": "https://randomuser.me/api/portraits/men/2.jpg"
-    },
-    {
-      "name": "Priya Singh",
-      "email": "priya@gmail.com",
-      "phone": "+91 9988776655",
-      "bio": "Teaches UI/UX",
-      "role": "Instructor",
-      "isVisible": true,
-      "image": "https://randomuser.me/api/portraits/women/3.jpg"
-    },
-    {
-      "name": "Amit Patel",
-      "email": "amit@gmail.com",
-      "phone": "+91 9012345678",
-      "bio": "Backend enthusiast",
-      "role": "User",
-      "isVisible": true,
-      "image": "https://randomuser.me/api/portraits/men/4.jpg"
-    },
-    {
-      "name": "Neha Gupta",
-      "email": "neha@gmail.com",
-      "phone": "+91 9090909090",
-      "bio": "Flutter Instructor",
-      "role": "Instructor",
-      "isVisible": true,
-      "image": "https://randomuser.me/api/portraits/women/5.jpg"
-    },
-  ];
+  final _userController = Get.find<UserController>();
+  final _searchController = TextEditingController();
+  String _searchQuery = "";
 
+  @override
+  void initState() {
+    super.initState();
+
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text.toLowerCase();
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+
         Row(
           children: [
             _inputBox(context, "Search users..."),
@@ -76,23 +48,46 @@ class _UsersScreenState extends State<UsersScreen> {
 
         SizedBox(height: context.sWidth * 0.02),
 
+        /// 🔥 API + REACTIVE UI
         Expanded(
-          child: ListView.separated(
-            itemCount: users.length,
-            separatorBuilder: (_, __) =>
-                SizedBox(height: context.sWidth * 0.01),
-            itemBuilder: (_, index) {
-              final user = users[index];
-              return _userCard(context, user, index);
-            },
-          ),
+          child: Obx(() {
+
+            if (_userController.isLoading.value) {
+              return Center(child: CircularProgressIndicator(color: AppColor.primary,));
+            }
+
+            /// 🔍 FILTER LOGIC
+            final filteredUsers = _userController.userList.where((user) {
+              final name = (user.name ?? "").toLowerCase();
+              final email = (user.email ?? "").toLowerCase();
+              final phone = (user.phone ?? "").toLowerCase();
+
+              return name.contains(_searchQuery) ||
+                  email.contains(_searchQuery) ||
+                  phone.contains(_searchQuery);
+            }).toList();
+
+            if (filteredUsers.isEmpty) {
+              return const Center(child: Text("No users found"));
+            }
+
+            return ListView.separated(
+              itemCount: filteredUsers.length,
+              separatorBuilder: (_, __) =>
+                  SizedBox(height: context.sWidth * 0.01),
+              itemBuilder: (_, index) {
+                final user = filteredUsers[index];
+                return _userCard(context, user);
+              },
+            );
+          }),
         )
       ],
     );
   }
 
-  /// 🔥 USER CARD (UPDATED)
-  Widget _userCard(BuildContext context, Map user, int index) {
+  /// 🔥 USER CARD WITH REAL DATA
+  Widget _userCard(BuildContext context, UserModel user) {
     return AppCard(
       hasBorder: true,
       padding: EdgeInsets.all(context.sWidth * 0.012),
@@ -105,7 +100,7 @@ class _UsersScreenState extends State<UsersScreen> {
             backgroundColor: Colors.grey.shade200,
             child: ClipOval(
               child: Image.network(
-                user["image"],
+                user.userImage ?? "",
                 width: context.sWidth * 0.04,
                 height: context.sWidth * 0.04,
                 fit: BoxFit.cover,
@@ -129,11 +124,11 @@ class _UsersScreenState extends State<UsersScreen> {
           SizedBox(width: context.sWidth * 0.015),
 
           Expanded(
-            child:Column(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  user["name"],
+                  user.name ?? "No Name",
                   style: GoogleFonts.poppins(
                     fontWeight: FontWeight.w600,
                     fontSize: context.text12,
@@ -142,7 +137,7 @@ class _UsersScreenState extends State<UsersScreen> {
                 SizedBox(height: 4),
 
                 Text(
-                  user["email"],
+                  user.email ?? "No Email",
                   style: GoogleFonts.poppins(
                     fontSize: context.text10,
                     color: AppColor.subtitle,
@@ -152,7 +147,7 @@ class _UsersScreenState extends State<UsersScreen> {
                 SizedBox(height: 2),
 
                 Text(
-                  user["phone"],
+                  user.phone ?? "No Phone",
                   style: GoogleFonts.poppins(
                     fontSize: context.text10,
                     color: AppColor.subtitle,
@@ -162,7 +157,7 @@ class _UsersScreenState extends State<UsersScreen> {
                 SizedBox(height: 2),
 
                 Text(
-                  user["bio"],
+                  user.bio ?? "",
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.poppins(
@@ -178,24 +173,28 @@ class _UsersScreenState extends State<UsersScreen> {
             children: [
               GestureDetector(
                 onTap: () {
-                  setState(() {
-                    users[index]["isVisible"] = !(users[index]["isVisible"] as bool);
-                  });
+                  // TODO: View user
                 },
-                child: Icon(
-                  user["isVisible"]
-                      ? Icons.visibility
-                      : Icons.visibility_off,
+                child: const Icon(
+                  Icons.visibility,
                   size: 22,
-                  color: user["isVisible"]
-                      ? Colors.green
-                      : Colors.grey,
+                  color: Colors.grey,
                 ),
               ),
 
               SizedBox(width: context.sWidth * 0.02),
 
-              _iconButton(Icons.delete, color: Colors.red),
+              GestureDetector(
+                onTap: () {
+                  // TODO: Delete user
+                },
+                child: const Icon(
+                  Icons.delete,
+                  size: 20,
+                  color: Colors.red,
+                ),
+              ),
+
               SizedBox(width: context.sWidth * 0.01),
             ],
           )
@@ -204,30 +203,39 @@ class _UsersScreenState extends State<UsersScreen> {
     );
   }
 
-  Widget _iconButton(IconData icon, {Color? color}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Icon(
-        icon,
-        size: 20,
-        color: color ?? Colors.grey,
-      ),
-    );
-  }
-
+  /// 🔍 SEARCH BOX
   Widget _inputBox(BuildContext context, String hint) {
-    return AppCard(
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: AppColor.primary.withOpacity(.1)),
+    );
+
+    return SizedBox(
       width: context.sWidth * 0.18,
-      color: AppColor.surface,
-      padding: EdgeInsets.zero,
-      child: TextField(
-        style: GoogleFonts.poppins(fontSize: context.text12),
+      child: TextFormField(
+        controller: _searchController,
+        style: GoogleFonts.poppins(
+          fontSize: context.text12,
+          color: AppColor.subtitle,
+        ),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: GoogleFonts.poppins(fontSize: context.text12),
+          prefixIcon: Icon(Icons.search, color: AppColor.subtitle),
+          suffixIcon: _searchController.text.isNotEmpty
+              ? IconButton(
+              icon: const Icon(Icons.close, size: 16),
+              onPressed: () {
+                _searchController.clear();
+                setState(() {
+                  _searchQuery = "";
+                });
+              })
+              : null,
+          border: border,
+          enabledBorder: border,
+          focusedBorder: border,
           filled: true,
-          fillColor: Colors.transparent,
-          border: InputBorder.none,
+          fillColor: AppColor.surface,
         ),
       ),
     );

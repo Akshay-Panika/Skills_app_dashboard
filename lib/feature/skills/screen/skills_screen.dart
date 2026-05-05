@@ -1,65 +1,73 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_instance/src/extension_instance.dart';
+import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:skill_daan_dashboard/core/constant/app_color.dart';
 import 'package:skill_daan_dashboard/core/constant/app_size.dart';
 import 'package:skill_daan_dashboard/core/widget/app_card.dart';
+import '../controller/service_controller.dart';
+import '../model/service_model.dart';
 
-class SkillsScreen extends StatelessWidget {
-  const SkillsScreen({super.key});
+class SkillsScreen extends StatefulWidget {
+   SkillsScreen({super.key});
 
   @override
+  State<SkillsScreen> createState() => _SkillsScreenState();
+}
+
+class _SkillsScreenState extends State<SkillsScreen> {
+  final _serviceController = Get.find<ServiceController>();
+   final _searchController = TextEditingController();
+   String _searchQuery = "";
+
+   String selectedType = "All";
+   final List<String> types = ["All", "Free", "Paid"];
+
+  @override
+  void initState() {
+    super.initState();
+
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text.toLowerCase();
+      });
+    });
+  }
+
+  /// 🔥 FILTER LOGIC
+  List<ServiceModel> get _filteredServices {
+    final all = _serviceController.services;
+
+    return all.where((service) {
+      final nameMatch =
+      service.serviceName.toLowerCase().contains(_searchQuery);
+
+      final typeMatch = _filterType(service);
+
+      return nameMatch && typeMatch;
+    }).toList();
+  }
+
+  bool _filterType(ServiceModel service) {
+    if (selectedType == "All") return true;
+
+    if (selectedType == "Free") {
+      return service.serviceAmount == null ||
+          service.serviceAmount == "0";
+    }
+
+    if (selectedType == "Paid") {
+      return service.serviceAmount != null &&
+          service.serviceAmount != "0";
+    }
+
+    return true;
+  }
+
+   @override
   Widget build(BuildContext context) {
-    final skills = [
-      {
-        "title": "Flutter Development",
-        "category": "Tech",
-        "type": "Mobile",
-        "students": "120",
-        "level": "Intermediate",
-        "image": "https://cdn-icons-png.flaticon.com/512/5968/5968705.png"
-      },
-      {
-        "title": "Graphic Design",
-        "category": "Non-Tech",
-        "type": "Creative",
-        "students": "80",
-        "level": "Beginner",
-        "image": "https://cdn-icons-png.flaticon.com/512/1055/1055687.png"
-      },
-      {
-        "title": "Digital Marketing",
-        "category": "Non-Tech",
-        "type": "Marketing",
-        "students": "200",
-        "level": "Advanced",
-        "image": "https://cdn-icons-png.flaticon.com/512/4149/4149643.png"
-      },
-      {
-        "title": "Python Programming",
-        "category": "Tech",
-        "type": "Backend",
-        "students": "150",
-        "level": "Intermediate",
-        "image": "https://cdn-icons-png.flaticon.com/512/5968/5968350.png"
-      },
-      {
-        "title": "Public Speaking",
-        "category": "Non-Tech",
-        "type": "Soft Skill",
-        "students": "60",
-        "level": "Beginner",
-        "image": "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
-      },
-      {
-        "title": "Web Development",
-        "category": "Tech",
-        "type": "Full Stack",
-        "students": "220",
-        "level": "Advanced",
-        "image": "https://cdn-icons-png.flaticon.com/512/2721/2721297.png"
-      },
-    ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -67,10 +75,23 @@ class SkillsScreen extends StatelessWidget {
         /// 🔹 Filters (Same as UI image)
         Row(
           children: [
-            _inputBox(context, "Search..."),
-            _dropdown(context, "Category"),
-            _dropdown(context, "Subcategory"),
-            _dropdown(context, "All"), /// Free & Paid
+            _inputBox(context, "Search Service..."),
+            SizedBox(width: context.sWidth * 0.01),
+
+            appDropdown<String>(
+              context: context,
+              width: 130,
+              items: types,
+              value: selectedType,
+              label: (e) => e,
+              onChanged: (val) {
+                if (val != null) {
+                  setState(() {
+                    selectedType = val;
+                  });
+                }
+              },
+            )
           ],
         ),
 
@@ -78,57 +99,100 @@ class SkillsScreen extends StatelessWidget {
 
         /// 🔹 Grid
         Expanded(
-          child: GridView.builder(
-            itemCount: skills.length,
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: context.sWidth > 1200 ? 3 : 2,
-              crossAxisSpacing: context.sWidth*0.02,
-              mainAxisSpacing: context.sWidth*0.02,
-              childAspectRatio: 2.4,
-            ),
-            itemBuilder: (_, index) {
-              final skill = skills[index];
-              return _skillCard(context, skill);
-            },
+          child: Obx(() {
+            if (_serviceController.isLoading.value) {
+              return Center(child: CircularProgressIndicator(color: AppColor.primary,));
+            }
+
+            if (_filteredServices.isEmpty) {
+              return const Center(child: Text("No services found"));
+            }
+              return GridView.builder(
+                itemCount: _filteredServices.length,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: context.sWidth > 1200 ? 3 : 2,
+                  crossAxisSpacing: context.sWidth*0.02,
+                  mainAxisSpacing: context.sWidth*0.02,
+                  childAspectRatio: 2.4,
+                ),
+                itemBuilder: (_, index) {
+                  final service = _filteredServices[index];
+                  return _skillCard(context, service);
+                },
+              );
+            }
           ),
         )
       ],
     );
   }
 
-  Widget _inputBox(BuildContext context, String hint) {
-    return AppCard(
-      width: context.sWidth * 0.18,
-      color: AppColor.surface,
-      padding: EdgeInsets.zero,
-      child: TextField(
-        style: GoogleFonts.poppins(fontSize: context.text12),
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: GoogleFonts.poppins(fontSize: context.text12),
-          filled: true,
-          fillColor: Colors.transparent,
-         border: InputBorder.none
-        ),
-      ),
-    );
-  }
+   Widget _inputBox(BuildContext context, String hint) {
+     final border = OutlineInputBorder(
+         borderRadius: BorderRadius.circular(12),
+         borderSide: BorderSide(color: AppColor.primary.withOpacity(.1)));
+     return SizedBox(
+       width: context.sWidth * 0.18,
+       child: TextFormField(
+         controller: _searchController,
+         style: GoogleFonts.poppins(
+             fontSize: context.text12, color: AppColor.subtitle),
+         decoration: InputDecoration(
+           hintText: hint,
+           prefixIcon: Icon(Icons.search, color: AppColor.subtitle),
+           suffixIcon: _searchController.text.isNotEmpty
+               ? IconButton(
+               icon: const Icon(Icons.close, size: 16),
+               onPressed: () {
+                 _searchController.clear();
+                 setState(() {
+                   _searchQuery = "";
+                 });
+               })
+               : null,
+           border: border,
+           enabledBorder: border,
+           focusedBorder: border,
+           filled: true,
+           fillColor: AppColor.surface,
+         ),
+       ),
+     );
+   }
 
-  Widget _dropdown(BuildContext context, String hint) {
+  Widget appDropdown<T>({
+    required BuildContext context,
+    required List<T> items,
+    required T value,
+    required String Function(T) label,
+    required Function(T?) onChanged,
+    double? width,
+    Color? color,
+  }) {
     return AppCard(
-      color: AppColor.surface,
-      padding: EdgeInsets.symmetric(horizontal: context.sWidth*0.02),
-      child: DropdownButton(
+      width: width,
+      hasBorder: true,
+      color: color ?? AppColor.surface,
+      padding:
+      EdgeInsets.symmetric(horizontal: context.sWidth * 0.02),
+      child: DropdownButton<T>(
+        value: value,
+        isExpanded: true,
         underline: const SizedBox(),
-        hint: Text(hint),
-        style: GoogleFonts.poppins(fontSize: context.text12),
-        items: const [],
-        onChanged: (_) {},
+        elevation: 2,
+        menuMaxHeight: 200,
+        items: items.map((e) {
+          return DropdownMenuItem<T>(
+            value: e,
+            child: Text(label(e)),
+          );
+        }).toList(),
+        onChanged: onChanged,
       ),
     );
   }
 
-  Widget _skillCard(BuildContext context, Map skill) {
+  Widget _skillCard(BuildContext context, ServiceModel service) {
     return AppCard(
       margin: EdgeInsets.zero,
       hasBorder: true,
@@ -138,7 +202,7 @@ class SkillsScreen extends StatelessWidget {
           Container(
             width: context.sWidth*0.1,
             color: Colors.grey.shade100,
-            child: Image.network(skill["image"]),
+            child: Image.network(service.serviceImage!),
           ),
 
 
@@ -150,11 +214,17 @@ class SkillsScreen extends StatelessWidget {
                 const SizedBox(height: 6),
 
                 /// Title
-                Text(
-                  skill["title"],
+                Text(service.serviceName,
                   style: GoogleFonts.poppins(
                     fontWeight: FontWeight.w600,
                     fontSize: context.text12,
+                  ),
+                ),
+                Text(service.serviceDescription!,
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w500,
+                    fontSize: context.text12,
+                    color: AppColor.subtitle
                   ),
                 ),
 
@@ -162,8 +232,12 @@ class SkillsScreen extends StatelessWidget {
 
                 /// Type
                 Text(
-                  skill["type"],
-                  style: GoogleFonts.poppins(color: AppColor.subtitle),
+                  (service.serviceAmount == null ||
+                      service.serviceAmount == "0")
+                      ? "Free"
+                      : "₹ ${service.serviceAmount}",
+                  style: GoogleFonts.poppins(
+                      color: AppColor.success),
                 ),
 
                 const Spacer(),
@@ -173,11 +247,11 @@ class SkillsScreen extends StatelessWidget {
                   children: [
                     FaIcon(FontAwesomeIcons.userGroup, size: context.sWidth*0.008),
                     const SizedBox(width: 5),
-                    Text(skill["students"]),
+                    Text("________"),
                     const SizedBox(width: 12),
                     FaIcon(FontAwesomeIcons.chalkboardTeacher, size: context.sWidth*0.008),
                     const SizedBox(width: 5),
-                    Text(skill["level"]),
+                    Text("________"),
                   ],
                 ),
 

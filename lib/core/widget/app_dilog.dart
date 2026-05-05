@@ -21,39 +21,44 @@ class AppDialog {
       builder: (_) => Dialog(
         backgroundColor: AppColor.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style:  GoogleFonts.poppins(fontSize: context.text16, fontWeight: FontWeight.w600, color: AppColor.title)),
-              SizedBox(height: context.sHeight*0.01,),
-
-              Text(message,style: GoogleFonts.poppins(color: AppColor.subtitle,fontSize: context.text14),),
-
-              SizedBox(height: context.sHeight*0.03,),
-
-              Row(
-                spacing: 16,
-                children: [
-                  Expanded(
-                    child: AppButton(
-                      text: cancelText,
-                      isOutline: true,
-                      onPressed: () => Navigator.of(context).pop(false),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: 420,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style:  GoogleFonts.poppins(fontSize: context.text16, fontWeight: FontWeight.w600, color: AppColor.title)),
+                SizedBox(height: context.sHeight*0.01,),
+          
+                Text(message,style: GoogleFonts.poppins(color: AppColor.subtitle,fontSize: context.text14),),
+          
+                SizedBox(height: context.sHeight*0.03,),
+          
+                Row(
+                  spacing: 16,
+                  children: [
+                    Expanded(
+                      child: AppButton(
+                        text: cancelText,
+                        isOutline: true,
+                        onPressed: () => Navigator.of(context).pop(false),
+                      ),
                     ),
-                  ),
-
-                  Expanded(
-                    child: AppButton(
-                      text: confirmText,
-                      onPressed: () => Navigator.of(context).pop(true),
+          
+                    Expanded(
+                      child: AppButton(
+                        text: confirmText,
+                        onPressed: () => Navigator.of(context).pop(true),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
