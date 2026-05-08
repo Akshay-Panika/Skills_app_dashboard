@@ -15,6 +15,7 @@ import '../../users/controller/user_controller.dart';
 
 class DashboardScreen extends StatelessWidget {
    DashboardScreen({super.key});
+
   final _userController = Get.find<UserController>();
   final _categoryController = Get.find<CategoryController>();
   final _subcategoryController = Get.find<SubCategoryController>();
@@ -57,7 +58,7 @@ class DashboardScreen extends StatelessWidget {
 
         SizedBox(height: context.sWidth * 0.0),
 
-        /// 🔥 LOWER SECTION
+
         Expanded(
           child: Row(
             children: [

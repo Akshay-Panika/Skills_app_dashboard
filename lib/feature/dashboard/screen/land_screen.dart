@@ -33,7 +33,7 @@ class _LandScreenState extends State<LandScreen> {
       case 0:
         return DashboardScreen();
       case 1:
-        return CategoryScreen(); // 👈 fresh build every time
+        return CategoryScreen();
       case 2:
         return SubcategoryScreen();
       case 3:
@@ -47,6 +47,8 @@ class _LandScreenState extends State<LandScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isMobile = context.sWidth < 700;
+
     return Scaffold(
       backgroundColor: AppColor.surface,
 
@@ -67,13 +69,33 @@ class _LandScreenState extends State<LandScreen> {
                     Text("Skill Daan", style: GoogleFonts.poppins(fontSize: context.text14,fontWeight: FontWeight.w600,color: AppColor.primary),),
                   ],
                 ),
-                IconButton(onPressed: () {
-                  
-                }, icon: FaIcon(FontAwesomeIcons.solidBell,size: 16,color: AppColor.primary,))
+                // IconButton(onPressed: () {
+                //
+                // }, icon: FaIcon(FontAwesomeIcons.solidBell,size: 16,color: AppColor.primary,))
               ],
             ),
           ),
 
+          if(context.sWidth < 1000)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(height: context.sWidth*0.4,),
+              Center(
+                child: Text(
+                  "Please use Desktop/Laptop",
+                  style: GoogleFonts.poppins(
+                    fontSize: context.text16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey.shade700
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          if(context.sWidth > 1000)
           Expanded(
             child: Row(
               children: [
