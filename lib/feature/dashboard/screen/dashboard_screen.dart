@@ -191,74 +191,84 @@ class DashboardScreen extends StatelessWidget {
   }
 
   /// 🔹 ACTIVITY ITEM
-  Widget _userItem(BuildContext context, UserModel user) {
-    return AppCard(
-      padding: EdgeInsets.all(context.sWidth * 0.0),
-      margin: EdgeInsets.zero,
-      child: Row(
-        children: [
-
-          CircleAvatar(
-            backgroundColor: Colors.grey.shade200,
-            radius: context.sWidth * 0.015,
-            child: ClipOval(
-              child: Image.network(
-                user.userImage!,
-                width: context.sWidth * 0.04,
-                height: context.sWidth * 0.04,
-                fit: BoxFit.cover,
-                loadingBuilder: (context, child, progress) {
-                  if (progress == null) return child;
-                  return const Center(
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  );
-                },
-                errorBuilder: (_, __, ___) {
-                  return Icon(
-                    Icons.person,
-                    size: context.sWidth * 0.014,
-                    color: Colors.grey,
-                  );
-                },
-              ),
-            ),
-          ),
-
-          SizedBox(width: context.sWidth * 0.01),
-
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(user.name!,
-                  style: GoogleFonts.poppins(
-                    fontSize: context.text12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                Text(user.phone!,
-                  style: GoogleFonts.poppins(
-                    fontSize: context.text12,
-                    fontWeight: FontWeight.w500,
-                    color: AppColor.subtitle
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          Text(
-            DateFormat('dd MMM yyyy').format(DateTime.parse(user.createdAt)),
-            style: GoogleFonts.poppins(
-              fontSize: context.text10,
-              fontWeight: FontWeight.w500,
-              color: AppColor.subtitle,
-            ),
-          )
-        ],
-      ),
-    );
-  }
+   Widget _userItem(BuildContext context, UserModel user) {
+     return AppCard(
+       padding: EdgeInsets.all(context.sWidth * 0.0),
+       margin: EdgeInsets.zero,
+       child: Row(
+         children: [
+           CircleAvatar(
+             backgroundColor: Colors.grey.shade200,
+             radius: context.sWidth * 0.015,
+             child: ClipOval(
+               // 👇 Yahan change kiya hai (user.userImage! ki jagah check lagaya)
+               child: (user.userImage != null && user.userImage!.isNotEmpty)
+                   ? Image.network(
+                 user.userImage!,
+                 width: context.sWidth * 0.04,
+                 height: context.sWidth * 0.04,
+                 fit: BoxFit.cover,
+                 loadingBuilder: (context, child, progress) {
+                   if (progress == null) return child;
+                   return const Center(
+                     child: CircularProgressIndicator(strokeWidth: 2),
+                   );
+                 },
+                 errorBuilder: (_, __, ___) {
+                   return Icon(
+                     Icons.person,
+                     size: context.sWidth * 0.014,
+                     color: Colors.grey,
+                   );
+                 },
+               )
+                   : Icon(
+                 Icons.person,
+                 size: context.sWidth * 0.014,
+                 color: Colors.grey,
+               ),
+             ),
+           ),
+           SizedBox(width: context.sWidth * 0.01),
+           Expanded(
+             child: Column(
+               crossAxisAlignment: CrossAxisAlignment.start,
+               children: [
+                 // 👇 Yahan change kiya hai (user.name! ki jagah fallback)
+                 Text(
+                   user.name ?? "Unknown User",
+                   style: GoogleFonts.poppins(
+                     fontSize: context.text12,
+                     fontWeight: FontWeight.w500,
+                   ),
+                 ),
+                 // 👇 Yahan change kiya hai (user.phone! ki jagah fallback)
+                 Text(
+                   user.phone ?? "No Phone",
+                   style: GoogleFonts.poppins(
+                       fontSize: context.text12,
+                       fontWeight: FontWeight.w500,
+                       color: AppColor.subtitle
+                   ),
+                 ),
+               ],
+             ),
+           ),
+           Text(
+             // DateFormat error se bachne ke liye check
+             user.createdAt != null
+                 ? DateFormat('dd MMM yyyy').format(DateTime.parse(user.createdAt))
+                 : "N/A",
+             style: GoogleFonts.poppins(
+               fontSize: context.text10,
+               fontWeight: FontWeight.w500,
+               color: AppColor.subtitle,
+             ),
+           )
+         ],
+       ),
+     );
+   }
 
   Widget _actionButton(
       BuildContext context,

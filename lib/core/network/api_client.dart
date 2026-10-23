@@ -4,7 +4,7 @@ class ApiClient {
 
   static final Dio dio = Dio(
     BaseOptions(
-      baseUrl: "https://skills-app-service.onrender.com/api/",
+      baseUrl: "https://skill-daan-service.onrender.com/api/",
       connectTimeout: const Duration(seconds: 30),
       receiveTimeout: const Duration(seconds: 30),
       headers: {
